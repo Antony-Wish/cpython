@@ -2,6 +2,9 @@ import tracemalloc
 from collections import namedtuple
 from lib.engine import Engine
 from lib.engine_factory import EngineFactory
+import sys
+import psutil
+import os
 
 def print_frame(traceback):
     print '--------print traceback, length:', len(traceback)
@@ -17,7 +20,7 @@ def engine_test():
     tb = tracemalloc.get_object_traceback(engine)
     print_frame(tb)
 
-def main():
+def test_tracemalloc():
     tracemalloc.start(25)
 
     # ... run your application ...
@@ -40,10 +43,42 @@ def main():
 
     tracemalloc.stop()
 
-# 
-# print("[ Top 10 ]")
-# for stat in top_stats[:10]:
-#     print(stat)
+def test_arena_statistics():
+    print '-------------------------\n', tracemalloc.get_arena_statistics()
+    print_memory_usage()
+
+    l = []
+    for x in xrange(5000):
+        #a = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX{0:09}".format(x)
+        a = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX{0:09}".format(x)
+        l.append(a)
+    print '-------------------------\n', tracemalloc.get_arena_statistics()
+    print_memory_usage()
+
+    for x in xrange(500000):
+        #a = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX{0:09}".format(x)
+        a = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX{0:09}".format(x)
+        l.append(a)
+    print '-------------------------\n', tracemalloc.get_arena_statistics()
+    print_memory_usage()
+
+    stay = []
+    for x in xrange(500000):
+        if x % 1000 == 0:
+            stay.append(l[x])
+
+    del l
+    print '-------------------------\n', tracemalloc.get_arena_statistics()
+    print_memory_usage()
+
+def print_memory_usage():
+    pid = os.getpid()
+    process = psutil.Process(pid)
+    print process.memory_info().rss
+
+def main():
+    test_arena_statistics()
+
 
 if __name__ == "__main__":
     main()

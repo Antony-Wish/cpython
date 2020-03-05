@@ -174,6 +174,16 @@ PyAPI_FUNC(void) PyMem_SetAllocator(PyMemAllocatorDomain domain,
 PyAPI_FUNC(void) PyMem_SetupDebugHooks(void);
 
 typedef struct {
+    int free_pool_count;
+
+    int total_pool_count;
+} PoolStatistics;
+
+typedef struct {
+    PoolStatistics pool_statistics;
+} ArenaStatus;
+
+typedef struct {
     /*number of usable arena*/
     int usable_arena_count;
 
@@ -182,11 +192,20 @@ typedef struct {
 
     int arenas_count;
 
-    uint maxarenas;
+    int maxarenas;
+
+    size_t narenas_currently_allocated;
+
+    size_t ntimes_arena_allocated;
+
+    size_t narenas_highwater;
+
+    ArenaStatus* usable_arena_status_list;
 
 } ArenaStatistics;
 
 PyAPI_FUNC(void) PyMem_GetArenaStatistics(ArenaStatistics *statistics);
+
 
 #ifdef __cplusplus
 }

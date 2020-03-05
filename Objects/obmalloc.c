@@ -822,20 +822,46 @@ static struct arena_object* usable_arenas = NULL;
 /* Number of arenas allocated that haven't been free()'d. */
 static size_t narenas_currently_allocated = 0;
 
-#ifdef PYMALLOC_DEBUG
+//#ifdef PYMALLOC_DEBUG
 /* Total number of times malloc() called to allocate an arena. */
 static size_t ntimes_arena_allocated = 0;
 /* High water mark (max value ever seen) for narenas_currently_allocated. */
 static size_t narenas_highwater = 0;
-#endif
+//#endif
 
 /**/
 void PyMem_GetArenaStatistics(ArenaStatistics *statistics)
 {
-    statistics->usable_arena_count = sizeof(usable_arenas) / sizeof(usable_arenas[0]);
-    statistics->unused_arena_count = sizeof(unused_arena_objects) / sizeof(unused_arena_objects[0]);
-    statistics->arenas_count = sizeof(arenas) / sizeof(arenas[0]);
+    statistics->usable_arena_count = GetArenaLinkedListLength(usable_arenas);
+    statistics->unused_arena_count = GetArenaLinkedListLength(unused_arena_objects);
+    statistics->arenas_count = GetArenaLinkedListLength(arenas);
     statistics->maxarenas = maxarenas;
+    statistics->narenas_currently_allocated = narenas_currently_allocated;
+//#ifdef PYMALLOC_DEBUG
+    statistics->ntimes_arena_allocated = ntimes_arena_allocated;
+    statistics->narenas_highwater = narenas_highwater;
+//#endif
+    //statistics->usable_arena_status_list
+    //fprintf(stderr, "Just test---------------------------------------------%ld.\n", ntimes_arena_allocated);
+}
+
+/* Calculate NULL-terminated linked list length.
+*/
+int GetArenaLinkedListLength(struct arena_object* header)
+{
+    int length = 0;
+    struct arena_object* tmp = header;
+    while (tmp != NULL)
+    {
+        tmp = tmp->nextarena;
+        length += 1;
+    }
+    return length;
+}
+
+void BuildArenaStatusList(struct arena_object* header)
+{
+    
 }
 
 /* Allocate a new arena.  If we run out of memory, return NULL.  Else
@@ -921,11 +947,11 @@ new_arena(void)
     arenaobj->address = (uptr)address;
 
     ++narenas_currently_allocated;
-#ifdef PYMALLOC_DEBUG
+//#ifdef PYMALLOC_DEBUG
     ++ntimes_arena_allocated;
     if (narenas_currently_allocated > narenas_highwater)
         narenas_highwater = narenas_currently_allocated;
-#endif
+//#endif
     arenaobj->freepools = NULL;
     /* pool_address <- first pool-aligned address in the arena
        nfreepools <- number of whole pools that fit after alignment */
